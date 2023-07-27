@@ -9,13 +9,14 @@ const stopTrack = () => {
     track = undefined;
   }
 };
+
 const useWebcam = (
   videoRef: MutableRefObject<HTMLVideoElement | null>,
   canvasRef: MutableRefObject<HTMLCanvasElement | null>,
-  onReadyCallback: (score: number) => void
+  onReadyCallback?: (score: number) => void
 ) => {
-  const [isReady, setIsReady] = useState<boolean>(false);
-  const [isPermit, setIsPermit] = useState<boolean>(false);
+  const [isReady, setIsReady] = useState<boolean>(true);
+  const [isPermit, setIsPermit] = useState<boolean>(true);
 
   const getVideoAndCanvas = () => {
     const { current: video } = videoRef;
@@ -26,16 +27,19 @@ const useWebcam = (
 
   const handleTakePhoto = () =>
     new Promise<string>((resolve) => {
+      console.log("capture");
       const { video, canvas } = getVideoAndCanvas();
 
-      if (!track || !video || !canvas) {
+      if (!video || !canvas) {
         resolve("");
+        console.log("no everyting");
         return;
       }
 
       const context = canvas.getContext("2d");
       if (!context) {
         resolve("");
+        console.log("no context");
         return;
       }
 
@@ -125,6 +129,7 @@ const useWebcam = (
 
   const renderLoading = () => {
     if (!isReady && !isPermit) {
+      console.log("render loading");
       return (
         <h1
           style={{
@@ -143,35 +148,42 @@ const useWebcam = (
 
   const renderError = () => {
     if (!isReady && isPermit) {
-      <div
-        style={{
-          position: "absolute",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "yellow",
-        }}
-      >
+      console.log("render error");
+
+      return (
         <div
           style={{
-            width: "full",
-            height: "full",
+            position: "absolute",
             display: "flex",
+            left: 0,
+            // right:0,
             justifyContent: "center",
             alignItems: "center",
-            flexDirection: "column",
+            background: "yellow",
           }}
         >
-          <p>camera's access is denied</p>
-          <a href={window.location.href}>reload page</a>
+          <div
+            style={{
+              width: "full",
+              height: "full",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 3,
+              flexDirection: "column",
+            }}
+          >
+            <p>camera's access is denied</p>
+            <a href={window.location.href}>reload page</a>
+          </div>
         </div>
-        ;
-      </div>;
+      );
     }
     return null;
   };
 
   const renderBackgroundBox = () => {
+    console.log("render background");
     if (isReady) {
       return (
         <div
@@ -191,11 +203,29 @@ const useWebcam = (
     }
   };
 
+   // useEffect(() => {
+  //   const getVideo = async () => {
+  //     try {
+  //       const steam = await navigator.mediaDevices.getUserMedia({
+  //         video: true,
+  //       });
+
+  //       if (videoRef.current) {
+  //         videoRef.current.srcObject = steam;
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+
+  //   getVideo();
+  // }, [videoRef]);
+
   const setupCameraAndCheck = async () => {
     const { video } = getVideoAndCanvas();
-    await new Promise((re) => {
+    await new Promise((r) => {
       setTimeout(() => {
-        re(null);
+        r(null);
       }, 100);
     });
 
@@ -217,29 +247,32 @@ const useWebcam = (
           width: { ideal: 1920 },
         },
       });
-        const vdoTrack = steam.getVideoTracks().find((v, i) => i === 0);
-        if (!vdoTrack) return;
-        //   navigator.mediaDevices.getSupportedConstraints.
-        //   if(!vdoTrack.getCapabilities.focusMode){
+      if (videoRef.current) {
+        videoRef.current.srcObject = steam;
+      }
+      const vdoTrack = steam.getVideoTracks().find((v, i) => i === 0);
+      if (!vdoTrack) return;
+      //   navigator.mediaDevices.getSupportedConstraints.
+      //   if(!vdoTrack.getCapabilities.focusMode){
 
-        vdoTrack.applyConstraints({ advanced: [{ focusMode: "manual" }] });
-        // vdoTrack.applyConstraints({focusMode:'manual'})
-
-        //   }
-        const focusModeCapability = vdoTrack.getCapabilities().focusMode;
-        if (!focusModeCapability) {
-          video.srcObject = steam;
-          track = vdoTrack;
-          break;
-        } else if (focusModeCapability.includes("continuous")) {
-          video.srcObject = steam;
-          track = vdoTrack;
-          break;
-        } else {
-          vdoTrack.stop();
-        }
+      // vdoTrack.applyConstraints({focusMode: 'manual', focusDistance: 0.33})
+      // vdoTrack.applyConstraints({focusMode:'manual'})
+      //   }
+      const focusModeCapability = vdoTrack.getCapabilities();
+      if (!focusModeCapability) {
+        video.srcObject = steam;
+        track = vdoTrack;
+        break;
+      } else {
+        vdoTrack.stop();
+      }
     }
   };
+
+ 
+  useEffect(() => {
+    onLoading();
+  }, [videoRef]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -247,9 +280,6 @@ const useWebcam = (
     }
   }, []);
 
-  useEffect(() => {
-    onLoading();
-  }, [setIsReady, videoRef]);
 
   return {
     stopTrack,

@@ -4,7 +4,7 @@ import Webcam from "./components/webcam";
 function App() {
   return (
     <div>
-      <Webcam setPredictScore={()=>{} }/>
+      <Webcam setPredictScore={() => {}} />
     </div>
   );
 }

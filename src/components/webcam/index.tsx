@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import useWebcam from "../customHook/useWebcam";
 
 type IWebcam = {
@@ -8,13 +8,6 @@ type IWebcam = {
 type WebcamProps = {
   setPredictScore: (v: number) => void;
 };
-// export type IWebCam = {
-//     captucre: () => Promise<string>;
-//   };
-
-//   export type WebCamProps = {
-//     setPredictScore: (v: number) => void;
-//   };
 
 const Webcam = forwardRef<IWebcam, WebcamProps>(({ setPredictScore }, ref) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -31,25 +24,76 @@ const Webcam = forwardRef<IWebcam, WebcamProps>(({ setPredictScore }, ref) => {
     }),
     [handleTakePhoto]
   );
+  useEffect(() => {
+    const getVideo = async () => {
+      try {
+        const steam = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
 
+        if (videoRef.current) {
+          videoRef.current.srcObject = steam;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getVideo();
+  }, [videoRef]);
   const width = containerRef.current?.clientWidth;
 
   return (
     <div
       ref={containerRef}
-      style={{ minHeight: 500, height: width, background: "red" }}
+      style={{
+        minHeight: 100,
+        height: width,
+        background: "red",
+        position: "relative",
+      }}
     >
-      <video
-        ref={videoRef}
-        autoPlay={false}
-        playsInline
-        style={{ background: "pink", width: width, height: width }}
-      ></video>
-      <canvas ref={canvasRef}></canvas>
-      {renderLoading()}
-      {renderBackgroundBox()}
-      {renderError()}
-      <button onClick={() => handleTakePhoto()}> capture</button>
+      <div>
+       
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          style={{
+            background: "yellow",
+            position: "absolute",
+            width: width,
+            height: width,
+          }}
+        ></video>
+        <canvas
+          ref={canvasRef}
+          style={{
+            background: "green",
+            position: "absolute",
+            width: width,
+            height: width,
+          }}
+        ></canvas>
+        {renderLoading()}
+        {renderBackgroundBox()}
+        {renderError()}
+      </div>
+      <button
+          onClick={() => handleTakePhoto()}
+          style={{
+            display: "block",
+            position:'relative',
+            zIndex: "10",
+            width: "100px",
+            height: "30px",
+            marginTop: "100px",
+            background: "pink",
+          }}
+        >
+          {" "}
+          capture
+        </button>
     </div>
   );
 });
